@@ -1,2 +1,4 @@
-import numpy as np
-print(np.__version__)
+from tkinter.filedialog import askopenfilename
+
+name = askopenfilename(initialdir="C:")
+print(name)
