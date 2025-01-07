@@ -1,1 +1,2 @@
-print("I love you")
+import numpy as np
+print(np.__version__)
