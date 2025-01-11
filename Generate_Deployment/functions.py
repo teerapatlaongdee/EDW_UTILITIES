@@ -165,7 +165,7 @@ git fetch -p && git pull origin
 
     git_command += f"""
 ### ADLS Jenkins Parameters ###
-{'CHANGE_NO'}\t\t:{ur_no}
+{'CHANGE_NO'}\t\t:{ur_no}/(SREQ-UAT)
 {'INPUT_HASH'}\t\t:
 {'blob_file'}\t\t\t\t:deployment_release/{month_period}/{ur_no}/00_deployList_{ur_no}_all.txt
 {'UR'}\t\t\t\t\t:{ur_code}
@@ -175,7 +175,7 @@ git fetch -p && git pull origin
 ### ADB Jenkins Parameters ###"""
     if have_config:
         git_command += f"""
-{'CHANGE_NO'}\t\t\t:{ur_no}
+{'CHANGE_NO'}\t\t\t:{ur_no}/(SREQ-UAT)
 {'INPUT_HASH'}\t\t\t:
 {'exec_notebook_file1'}\t:ADB_01/deployment_release/{month_period}/{ur_no}/00_deployList_{ur_no}_utilities.txt
 {'CLUSTER_ID'}\t\t\t:DEV(0402-042346-cyaeulo4) SIT(0829-162655-y5wtmkoe) UAT(0829-172743-etfsoye4)
@@ -185,7 +185,7 @@ git fetch -p && git pull origin
 """
     if have_table:
         git_command += f"""
-{'CHANGE_NO'}\t\t\t:{ur_no}
+{'CHANGE_NO'}\t\t\t:{ur_no}/(SREQ-UAT)
 {'INPUT_HASH'}\t\t\t:
 {'exec_notebook_file1'}\t:ADB_01/deployment_release/{month_period}/{ur_no}/01_deployList_{ur_no}_applyTableChange.txt
 {'CLUSTER_ID'}\t\t\t:DEV(0402-042346-cyaeulo4) SIT(0829-162655-y5wtmkoe) UAT(0829-172743-etfsoye4)
@@ -195,7 +195,7 @@ git fetch -p && git pull origin
 """
     if have_view:
         git_command += f"""
-{'CHANGE_NO'}\t\t\t:{ur_no}
+{'CHANGE_NO'}\t\t\t:{ur_no}/(SREQ-UAT)
 {'INPUT_HASH'}\t\t\t:
 {'exec_notebook_file1'}\t:ADB_01/deployment_release/{month_period}/{ur_no}/02_deployList_{ur_no}_createDDL.txt
 {'CLUSTER_ID'}\t\t\t:DEV(0402-042346-cyaeulo4) SIT(0829-162655-y5wtmkoe) UAT(0829-172743-etfsoye4)
