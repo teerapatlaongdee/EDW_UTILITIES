@@ -8,12 +8,17 @@ current_path = os.getcwd()
 tz = timezone(timedelta(hours=7)) #set timezone UTC+7
 
 ## Get input file
-input_file = askopenfilename(initialdir=current_path, title="Choose PREPARE_ITEM")
-print(input_file)
+# input_file = askopenfilename(initialdir=current_path, title="Choose PREPARE_ITEM")
+# print(input_file)
 
 ## Get path output
-destination_folder = askdirectory(initialdir=current_path, title="Choose Destination Folder")
-print(destination_folder)
+# destination_folder = askdirectory(initialdir=current_path, title="Choose Destination Folder")
+# print(destination_folder)
+
+destination_folder = "C:/scb100690/Playground/test_repo/Generate_Deployment/output_folder"
+
+input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_ICORE.xlsx"
+# input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_SYSTEM_Test.xlsx"
 
 ## Read excel file to Pandas DataFrame
 df = pd.read_excel(input_file, sheet_name='Config_List')
@@ -253,35 +258,39 @@ if (grouped_int_mapping['pipeline_name'].values[0] == 'U24_Import_Interface_Mapp
 json_ChangeTable = '{"run_name": "01_Apply_table_change","existing_cluster_id": "","notebook_task":{"notebook_path":"/Shared/Apply_table_change_module/01_Apply_table_change", "base_parameters":{"PATH_SRC": "/dbfs/mnt/edw-ctn-landing/ddl_script_apply_change/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/scripts"}}}'
 parsed = json.loads(json_ChangeTable)
 json_txt = (json.dumps(parsed, indent=4)).replace("/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/", f"/{month_period}/{ur_no}/").replace("\n","\n\n")
-print(json_txt)
+# print(json_txt)
 
 changeTB_json = open(f"{path_adb_tmp}/01_Apply_table_change.json", "w")
 changeTB_json.write(json_txt)
 changeTB_json.close()
+print("01_Apply_table_change.json >> Export File Success")
 
 deploy_job_changeTB = f"ADB_01/{month_period}/{ur_no}/Apply_table_change_module/01_Apply_table_change.json"
-print(deploy_job_changeTB)
+# print(deploy_job_changeTB)
 
 deployList_changeTB = open(f"{path_adb_tmp}/01_deployList_{ur_no}_applyTableChange.txt", "w")
 deployList_changeTB.write(deploy_job_changeTB)
 deployList_changeTB.close()
+print(f"01_deployList_{ur_no}_applyTableChange.txt >> Export File Success")
 
 ## Create new object / Change existing view
 json_CreateDDL = '{"run_name": "99_Run_replace_DDL_Databrick_loop","existing_cluster_id": "","notebook_task":{"notebook_path":"/Shared/Setup/99_Run_replace_DDL_Databrick_loop", "base_parameters":{"PATH_SRC": "/dbfs/mnt/edw-ctn-landing/ddl_script/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/ddl","PATH_ERROR": "/dbfs/mnt/edw-ctn-landing/ddl_script/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/errorlog"}}}'
 parsed = json.loads(json_CreateDDL)
 json_txt = (json.dumps(parsed, indent=4)).replace("/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/", f"/{month_period}/{ur_no}/").replace("\n","\n\n")
-print(json_txt)
+# print(json_txt)
 
 createDDL_json = open(f"{path_adb_tmp}/99_Run_replace_DDL_Databrick_loop.json", "w")
 createDDL_json.write(json_txt)
 createDDL_json.close()
+print("99_Run_replace_DDL_Databrick_loop.json >> Export File Success")
 
 deploy_job_createDDL = f"ADB_01/{month_period}/{ur_no}/Setup/99_Run_replace_DDL_Databrick_loop.json\n"
-print(deploy_job_createDDL)
+# print(deploy_job_createDDL)
 
 deployList_createDDL = open(f"{path_adb_tmp}/02_deployList_{ur_no}_createDDL.txt", "w")
 deployList_createDDL.write(deploy_job_createDDL)
 deployList_createDDL.close()
+print(f"02_deployList_{ur_no}_createDDL.txt >> Export File Success")
 
 
 ### Recreate Persist
@@ -290,18 +299,20 @@ dlp_list = ",".join(df_dlp['TABLE_NAME_LIST'].tolist())
 if not df_dlp.empty:
     dictionary = f.create_nested_dict(None, "25_Recreate_Persisted", deploy_date, dlp_list)
     json_object = json.dumps(dictionary, indent = 4)
-    print(json_object)
+    # print(json_object)
 
     dlp_json = open(f"{path_adb_tmp}/25_Recreate_Persisted.json", "w")
     dlp_json.write(json_object)
     dlp_json.close()
+    print("25_Recreate_Persisted.json >> Export File Success")
 
     deploy_job_recPersist = f"ADB_01/{month_period}/{ur_no}/Setup/25_Recreate_Persisted.json"
-    print(deploy_job_recPersist)
+    # print(deploy_job_recPersist)
 
     deployList_recPersist = open(f"{path_adb_tmp}/02_deployList_{ur_no}_createDDL.txt", "a")
     deployList_recPersist.write(deploy_job_recPersist)
     deployList_recPersist.close()
+    print(f"02_deployList_{ur_no}_createDDL.txt >> Append File Success")
 
 
 ### edwcloud_adls
@@ -333,14 +344,20 @@ for obj in objs:
 
 deploylist_tb_change.close()
 deploylist_new_obj.close()
+print(f"01_deployList_{ur_no}_applyTableChange.txt >> Append File Success")
+print(f"02_deployList_{ur_no}_createDDL.txt >> Append File Success\n")
 
 ## Remove DDL part where Table or View not exist
 if not have_table:
     os.remove(f"{path_adb_tmp}/01_deployList_{ur_no}_applyTableChange.txt")
     os.remove(f"{path_adls_tmp}/01_deployList_{ur_no}.txt")
+    print(f"ADB: 01_deployList_{ur_no}_applyTableChange.txt >> Remove Success")
+    print(f"ADLS: 01_deployList_{ur_no}.txt >> Remove Success")
 if not have_view:
     os.remove(f"{path_adb_tmp}/02_deployList_{ur_no}_createDDL.txt")
     os.remove(f"{path_adls_tmp}/02_deployList_{ur_no}.txt")
+    print(f"ADB: 02_deployList_{ur_no}_createDDL.txt >> Remove Success")
+    print(f"ADLS: 02_deployList_{ur_no}.txt >> Remove Success")
 
 ### Combine every deployment_list
 deploy_config_ = None
