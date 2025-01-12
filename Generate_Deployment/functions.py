@@ -1,4 +1,4 @@
-import os, shutil
+import os, shutil, json
 
 
 def create_folder(path):
@@ -220,13 +220,13 @@ git fetch -p && git pull origin
 {'Implementation Plan'} :edwcloud_adls, edwcloud_adb
 > attach .zip packing folder and Playbook_UAT
 """
-    print(git_command)
+    # print(git_command)
     #Write git command
     gitcmd_file = open(f"{output_path}/git_command_{ur_no}.txt", "w")
     gitcmd_file.write(git_command)
     gitcmd_file.close()
 
-def create_git_form_folder(ur_no, month_period, path_osfolder):
+def create_git_form_folder(ur_no, month_period, path_osfolder, notebook_df):
     adb_git_folder = path_osfolder+'/edwcloud_adb/src/Job/ADB_01'
     adls_git_folder = path_osfolder+'/edwcloud_adls/src'
     create_folder(adb_git_folder)
@@ -284,3 +284,43 @@ def create_git_form_folder(ur_no, month_period, path_osfolder):
             for x in adb_json_file_list:
                 if file_for_move in x:
                     shutil.copy(x, sub_sub_folder+'/'+file_for_move)
+
+    # ### Move notebook to Shared folder
+    # if not notebook_df.empty:
+    #     notebook_folder = path_osfolder+'/edwcloud_adb/src/Notebook'
+    #     deploylist_upload_folder = f"{notebook_folder}/deployment_release/{month_period}/{ur_no}"
+    #     dbc_folder = f"{notebook_folder}/{month_period}/{ur_no}/Execute"
+
+    #     create_folder(notebook_folder)
+    #     create_folder(deploylist_upload_folder)
+    #     create_folder(f"{adb_git_folder}/{month_period}/{ur_no}/Execute")
+    #     create_folder(dbc_folder)
+    #     #dec9999/SI-0000_SR-00000_SR-00000_SYSTEM/Execute/Generate_Report_Something.dbc
+
+    #     deployList_notebook = open(f"{deploylist_upload_folder}/03_deployList_{ur_no}_Upload_Notebook.txt", "w")
+
+    #     for index, row in notebook_df.iterrows():
+    #         shared_path = row['SHARED_PATH'][:-1]
+    #         notebook_name = row['NOTEBOOK_NAME']
+    #         execute_flag = row['EXECUTE_FLAG']
+
+    #         deployList_notebook.write(f"PYTHON,DBC,{shared_path},{notebook_name},{month_period}/{ur_no}/Execute/{notebook_name}.dbc\n")
+    #         deployList_execute = open(f"{adb_deploylist_path}03_deployList_{ur_no}_execute_notebook.txt", "w")
+
+    #         dbc_file = open(f"{dbc_folder}/{notebook_name}.dbc.txt", "w")
+    #         dbc_file.close()
+            
+    #         if execute_flag == 1:
+    #             json_move_notebook = '{"run_name": "<NOTEBOOK_NAME>","existing_cluster_id": "","notebook_task":{"notebook_path":"<NOTEBOOK_PATH>/<NOTEBOOK_NAME>", "base_parameters":{}}}'
+    #             parsed = json.loads(json_move_notebook)
+    #             json_txt = (json.dumps(parsed, indent=4)).replace("<NOTEBOOK_NAME>", notebook_name).replace("<NOTEBOOK_PATH>", shared_path).replace("\n","\n\n")
+        
+    #             move_notebook_json = open(f"{adb_git_folder}/{month_period}/{ur_no}/Execute/01_Execute_{notebook_name}.json", "w")
+    #             move_notebook_json.write(json_txt)
+    #             move_notebook_json.close()
+
+    #             deploy_job_createDDL = f"ADB_01/{month_period}/{ur_no}/Execute/01_Execute_{notebook_name}.json\n"
+    #             deployList_execute.write(deploy_job_createDDL)
+                
+    #     deployList_notebook.close()
+    #     deployList_execute.close()

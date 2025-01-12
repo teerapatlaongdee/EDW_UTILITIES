@@ -1,5 +1,5 @@
 import functions as f
-import json, os, re, shutil
+import json, os, re, shutil, sys
 import pandas as pd
 from datetime import datetime, timedelta, timezone
 from tkinter.filedialog import askopenfilename, askdirectory
@@ -17,8 +17,8 @@ tz = timezone(timedelta(hours=7)) #set timezone UTC+7
 
 destination_folder = "C:/scb100690/Playground/test_repo/Generate_Deployment/output_folder"
 
-input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_ICORE.xlsx"
-# input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_SYSTEM_Test.xlsx"
+# input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_ICORE.xlsx"
+input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_SYSTEM_Test.xlsx"
 
 ## Read excel file to Pandas DataFrame
 df = pd.read_excel(input_file, sheet_name='Config_List')
@@ -28,6 +28,7 @@ df_table_def = pd.read_excel(input_file, sheet_name='U23_Import_Table_Definition
 df_int_mapping = pd.read_excel(input_file, sheet_name='U24_Import_Interface_Mapping')
 df_table_view = pd.read_excel(input_file, sheet_name='99_Run_replace_DDL')
 df_dlp = df_table_def[df_table_def['SCHEMA_NAME_LIST'] == 'DLPRST'].copy() ## for recreate persist
+df_adb_notebook = pd.read_excel(input_file, sheet_name='ADB_Notebook_To_Shared_Folder')
 
 ## Get UR information
 ur_no = df["Information"].values[0]
@@ -359,6 +360,7 @@ if not have_view:
     print(f"ADB: 02_deployList_{ur_no}_createDDL.txt >> Remove Success")
     print(f"ADLS: 02_deployList_{ur_no}.txt >> Remove Success")
 
+
 ### Combine every deployment_list
 deploy_config_ = None
 deploy_table_ = None
@@ -381,11 +383,74 @@ write_text += deploy_view_ if deploy_view_ else ''
 with open(f'{path_osfolder}/00_deployList_{ur_no}_all.txt', 'w') as output_file:
     output_file.write(write_text)
 
-## Create git command
-f.create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, path_osfolder, user_email)
-
 ## Create GIT folder form
-f.create_git_form_folder(ur_no, month_period, path_osfolder)
+f.create_git_form_folder(ur_no, month_period, path_osfolder, df_adb_notebook)
+
+### Move notebook to Shared folder
+upload_notebook = False
+exec_notebook = False
+if not df_adb_notebook.empty:
+    upload_notebook = True
+    adb_git_folder = path_osfolder+'/edwcloud_adb/src/Job/ADB_01'
+    adb_deploylist_path = adb_git_folder+f"/deployment_release/{month_period}/{ur_no}/"
+
+    notebook_folder = path_osfolder+'/edwcloud_adb/src/Notebook'
+    deploylist_upload_folder = f"{notebook_folder}/deployment_release/{month_period}/{ur_no}"
+    adb_execute_json_folder = f"{adb_git_folder}/{month_period}/{ur_no}/Execute"
+    dbc_folder = f"{notebook_folder}/{month_period}/{ur_no}/Execute"
+
+    f.create_folder(notebook_folder)
+    f.create_folder(deploylist_upload_folder)
+    f.create_folder(adb_execute_json_folder)
+    f.create_folder(dbc_folder)
+    #dec9999/SI-0000_SR-00000_SR-00000_SYSTEM/Execute/Generate_Report_Something.dbc
+
+    deployList_notebook = open(f"{deploylist_upload_folder}/03_deployList_{ur_no}_Upload_Notebook.txt", "w")
+
+    for index, row in df_adb_notebook.iterrows():
+        shared_path = row['SHARED_PATH'][:-1]
+        notebook_name = row['NOTEBOOK_NAME']
+        execute_flag = row['EXECUTE_FLAG']
+
+        deployList_notebook.write(f"PYTHON,DBC,{shared_path},{notebook_name},{month_period}/{ur_no}/Execute/{notebook_name}.dbc\n")
+        deployList_execute = open(f"{adb_deploylist_path}03_deployList_{ur_no}_execute_notebook.txt", "w")
+
+        dbc_file = open(f"{dbc_folder}/{notebook_name}.dbc.txt", "w")
+        dbc_file.close()
+        
+        if execute_flag == 1:
+            exec_notebook = True
+            json_move_notebook = '{"run_name": "<NOTEBOOK_NAME>","existing_cluster_id": "","notebook_task":{"notebook_path":"<NOTEBOOK_PATH>/<NOTEBOOK_NAME>", "base_parameters":{}}}'
+            parsed = json.loads(json_move_notebook)
+            json_txt = (json.dumps(parsed, indent=4)).replace("<NOTEBOOK_NAME>", notebook_name).replace("<NOTEBOOK_PATH>", shared_path).replace("\n","\n\n")
+    
+            move_notebook_json = open(f"{adb_git_folder}/{month_period}/{ur_no}/Execute/01_Execute_{notebook_name}.json", "w")
+            move_notebook_json.write(json_txt)
+            move_notebook_json.close()
+
+            deploy_job_createDDL = f"ADB_01/{month_period}/{ur_no}/Execute/01_Execute_{notebook_name}.json\n"
+            deployList_execute.write(deploy_job_createDDL)
+            
+    deployList_notebook.close()
+    deployList_execute.close()
+
+    # remove deployList_execute if empty
+    list_execute_path = f"{adb_deploylist_path}03_deployList_{ur_no}_execute_notebook.txt"
+
+    list_execute_file = open(list_execute_path, 'r')
+    content = list_execute_file.read().strip() 
+    list_execute_file.close()
+
+    if not content: 
+        print("The file is empty.")
+        os.remove(list_execute_path)
+        shutil.rmtree(adb_execute_json_folder)
+    else: 
+        print("The file is not empty.")
+
+## Create git command
+# f.create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, path_osfolder, user_email)
+f.create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, path_osfolder, user_email)
 
 ### remove temp folder
 shutil.rmtree(path_osfolder+'/edwcloud_adls_tmp') #remove adls temp folder
