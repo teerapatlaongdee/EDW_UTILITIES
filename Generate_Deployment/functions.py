@@ -131,7 +131,7 @@ def write_file_txt_of_json(dataframe, ur_no, path_adb_tmp):
     except Exception as e:
         print(f"Fail to write TXT >>{str(e)}")
 
-def create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, upload_notebook, exec_notebook,output_path, email):
+def create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, upload_notebook, exec_notebook, output_path, email):
     split_ur_no = ur_no.split('_')
     ur_code = ('_').join(split_ur_no[:3])
     sr_epic = ur_code.split('_')[1]

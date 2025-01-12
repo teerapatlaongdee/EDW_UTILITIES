@@ -449,8 +449,7 @@ if not df_adb_notebook.empty:
         print("The file is not empty.")
 
 ## Create git command
-# f.create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, path_osfolder, user_email)
-f.create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, path_osfolder, user_email)
+f.create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, upload_notebook, exec_notebook, path_osfolder, user_email)
 
 ### remove temp folder
 shutil.rmtree(path_osfolder+'/edwcloud_adls_tmp') #remove adls temp folder
