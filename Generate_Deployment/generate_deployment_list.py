@@ -7,18 +7,18 @@ from tkinter.filedialog import askopenfilename, askdirectory
 current_path = os.getcwd()
 tz = timezone(timedelta(hours=7)) #set timezone UTC+7
 
-## Get input file
-# input_file = askopenfilename(initialdir=current_path, title="Choose PREPARE_ITEM")
-# print(input_file)
+# Get input file
+input_file = askopenfilename(initialdir=current_path, title="Choose PREPARE_ITEM")
+print(input_file)
 
-## Get path output
-# destination_folder = askdirectory(initialdir=current_path, title="Choose Destination Folder")
-# print(destination_folder)
+# Get path output
+destination_folder = askdirectory(initialdir=current_path, title="Choose Destination Folder")
+print(destination_folder)
 
-destination_folder = "C:/scb100690/Playground/test_repo/Generate_Deployment/output_folder"
+# destination_folder = "C:/scb100690/Playground/test_repo/Generate_Deployment/output_folder"
 
 # input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_ICORE.xlsx"
-input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_SYSTEM_Test.xlsx"
+# input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_SYSTEM_Test.xlsx"
 
 ## Read excel file to Pandas DataFrame
 df = pd.read_excel(input_file, sheet_name='Config_List')
@@ -34,7 +34,7 @@ df_adb_notebook = pd.read_excel(input_file, sheet_name='ADB_Notebook_To_Shared_F
 ur_no = df["Information"].values[0]
 user_email = df["Information"].values[1]
 month_period = df["Information"].values[2]
-deploy_date = df["Information"].values[3][-2:]
+deploy_date = df["Information"].values[3]
 
 # print(f'UR_NO : {ur_no}')
 # print(f'User Email : {user_email}')
@@ -449,7 +449,7 @@ if not df_adb_notebook.empty:
         print("The file is not empty.")
 
 ## Create git command
-f.create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, upload_notebook, exec_notebook, path_osfolder, user_email)
+f.create_git_command(ur_no, month_period, deploy_date[-2:], have_config, have_view, have_table, upload_notebook, exec_notebook, path_osfolder, user_email)
 
 ### remove temp folder
 shutil.rmtree(path_osfolder+'/edwcloud_adls_tmp') #remove adls temp folder
