@@ -1,5 +1,5 @@
 import functions as f
-import json, os, re, shutil, sys
+import json, os, re, shutil, time, sys
 import pandas as pd
 from datetime import datetime, timedelta, timezone
 from tkinter.filedialog import askopenfilename, askdirectory
@@ -15,12 +15,8 @@ print(input_file)
 destination_folder = askdirectory(initialdir=current_path, title="Choose Destination Folder")
 print(destination_folder)
 
-# destination_folder = "C:/scb100690/Playground/test_repo/Generate_Deployment/output_folder"
-
-# input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_ICORE.xlsx"
-# input_file = "C:/scb100690/Playground/test_repo/Generate_Deployment/Input_folder/PREPARE_ITEM_LIST_SI-0000_SR-00000_SR-00000_SYSTEM_Test.xlsx"
-
 ## Read excel file to Pandas DataFrame
+print("Reading Excel File", end=""); f.print_dots(1, 1)
 df = pd.read_excel(input_file, sheet_name='Config_List')
 df_adf_config = pd.read_excel(input_file, sheet_name='U21_Import_ADF_Config')
 df_regist_config = pd.read_excel(input_file, sheet_name='U22_Import_File_Config')
@@ -31,20 +27,22 @@ df_dlp = df_table_def[df_table_def['SCHEMA_NAME_LIST'] == 'DLPRST'].copy() ## fo
 df_adb_notebook = pd.read_excel(input_file, sheet_name='ADB_Notebook_To_Shared_Folder')
 
 ## Get UR information
+print("Getting UR Information", end=""); f.print_dots(1, 1)
 ur_no = df["Information"].values[0]
 user_email = df["Information"].values[1]
 month_period = df["Information"].values[2]
 deploy_date = df["Information"].values[3]
 
-# print(f'UR_NO : {ur_no}')
-# print(f'User Email : {user_email}')
-# print(f'Month_Period : {month_period}')
-# print(f'Deploy_Date : {df["Information"].values[3]}')
+# Basic Information
+print(f'UR_NO : {ur_no}')
+print(f'User Email : {user_email}')
+print(f'Month_Period : {month_period}')
+print(f'Deploy_Date : {deploy_date}')
+print("")
 
 ## SET All Path and Create folder
 bak_time = datetime.now(tz=tz).strftime("%y%m%d")+"_"+datetime.now(tz=tz).strftime("%H%M")
 
-# path_destfolder = "C:/scb100690/Playground/test_repo/Generate_Deployment/output_folder/UR/"+month_period+"/"+ur_no
 path_destfolder = f"{destination_folder}/"+ur_no+'_'+bak_time
 folder_name = 'deploy_test_'+ur_no+'_'+bak_time
 
@@ -52,10 +50,12 @@ path_osfolder = '/tmp/'+folder_name
 path_adls_tmp = path_osfolder+'/edwcloud_adls_tmp'
 path_adb_tmp = path_osfolder+'/edwcloud_adb_tmp'
 
-# print(f"Storage path: {path_destfolder}\n")
-# print(f"Temp: {path_osfolder}")
-# print(f"GIT_ADLS: {path_adls_tmp}")
-# print(f"GIT_ADB: {path_adb_tmp}")
+print("Creating Folder", end=""); f.print_dots(0.5, 1)
+print(f"Destination Folder: {path_destfolder}"); time.sleep(0.5)
+print(f"Temp Folder: {path_osfolder}"); time.sleep(0.5)
+print(f"ADLS temp folder: {path_adls_tmp}"); time.sleep(0.5)
+print(f"ADB temp folder: {path_adb_tmp}"); time.sleep(0.5)
+print("")
 
 try:
     f.create_folder(path_osfolder)
@@ -115,7 +115,6 @@ try:
     grouped_int_mapping = pd.concat([df_mapping_param, tmp_df], axis=1)
     grouped_int_mapping = grouped_int_mapping.fillna("")
 
-
     ### ADF_CONFIG, REGISTER_CONFIG, TABLE_DEFINITION AND INTERFACE_MAPPING
     have_config = False
 
@@ -155,8 +154,8 @@ try:
         df_dlp = df_table_def[df_table_def['SCHEMA_NAME_LIST'] == 'DLPRST'].copy() ## for recreate persist
         
         have_config = True
-        config_name = "TABLE_DEF"   
-        pl_name = "U23_Import_Table_Definition"         
+        config_name = "TABLE_DEFINITION"   
+        pl_name = "U23_Import_Table_Definition"
         if (grouped_table_def['SCHEMA_NAME_LIST'].str.len().values[0] <= 2048) & (grouped_table_def['TABLE_NAME_LIST'].str.len().values[0] <= 2048):
         # Convert dataframe to json format
             for i in range(len(grouped_table_def)):
@@ -189,24 +188,27 @@ try:
 
     ## Convert excel list to deployment list
     if (grouped_adf_config['pipeline_name'].values[0] == 'U21_Import_ADF_Config' and grouped_adf_config['GENERATE_FILE_FLAG'].values[0] == 1):
+        config_name = "ADF_CONFIG"
         myList = []
         file_name = df_adf_config['FILE_NAME_LIST'].tolist()
         for i in range(len(file_name)):
             myStr = f"""scbedwseasta001adls,edw-ctn-landing,UTILITIES/IMPORT/ADF_CONFIG/{file_name[i]}.xlsx,adf_config/{file_name[i]}.xlsx"""
             myList.append(myStr)
         dataframe = pd.DataFrame(myList).apply(f.ljust)
-        f.write_file_txt(dataframe, ur_no, path_adls_tmp)
+        f.write_file_txt(dataframe, ur_no, path_adls_tmp, config_name)
 
     if (grouped_file_config['pipeline_name'].values[0] == 'U22_Import_File_Config' and grouped_file_config['GENERATE_FILE_FLAG'].values[0] == 1):
+        config_name = "REGISTER_CONFIG"
         myList = []
         file_name = df_regist_config['FILE_NAME_LIST'].tolist()
         for i in range(len(file_name)):
             myStr = f"""scbedwseasta001adls,edw-ctn-landing,UTILITIES/IMPORT/U99_PL_REGISTER_CONFIG/{file_name[i]}.xlsx,utilities/import/U99_PL_REGISTER_CONFIG/{file_name[i]}.xlsx"""
             myList.append(myStr)
         dataframe = pd.DataFrame(myList).apply(f.ljust)
-        f.write_file_txt(dataframe, ur_no, path_adls_tmp)
+        f.write_file_txt(dataframe, ur_no, path_adls_tmp, config_name)
 
     if (grouped_table_def['pipeline_name'].values[0] == 'U23_Import_Table_Definition' and grouped_table_def['GENERATE_FILE_FLAG'].values[0] == 1):
+        config_name = "TABLE_DEFINITION"
         myList = []
         schema_name = df_table_def['SCHEMA_NAME_LIST'].tolist()
         table_name = df_table_def['TABLE_NAME_LIST'].tolist()
@@ -214,107 +216,114 @@ try:
             myStr = f"""scbedwseasta001adls,edw-ctn-landing,UTILITIES/IMPORT/U02_TABLE_DEFINITION/{schema_name[i]}_{table_name[i]}.csv,utilities/import/U02_TABLE_DEFINITION/{schema_name[i]}_{table_name[i]}.csv"""
             myList.append(myStr)
         dataframe = pd.DataFrame(myList).apply(f.ljust)
-        f.write_file_txt(dataframe, ur_no, path_adls_tmp)
+        f.write_file_txt(dataframe, ur_no, path_adls_tmp, config_name)
 
     if (grouped_int_mapping['pipeline_name'].values[0] == 'U24_Import_Interface_Mapping_Config' and grouped_int_mapping['GENERATE_FILE_FLAG'].values[0] == 1):
+        config_name = "INT_MAPPING"
         myList = []
         interface_name = df_int_mapping['INTERFACE_NAME_LIST'].tolist()
         for i in range(len(interface_name)):
             myStr = f"""scbedwseasta001adls,edw-ctn-landing,UTILITIES/IMPORT/U03_INT_MAPPING/{interface_name[i]}.csv,utilities/import/U03_INT_MAPPING/{interface_name[i]}.csv"""
             myList.append(myStr)
         dataframe = pd.DataFrame(myList).apply(f.ljust)
-        f.write_file_txt(dataframe, ur_no, path_adls_tmp)
+        f.write_file_txt(dataframe, ur_no, path_adls_tmp, config_name)
 
     ## Convert excel list to deployment list of json file
     if (grouped_adf_config['pipeline_name'].values[0] == 'U21_Import_ADF_Config' and grouped_adf_config['GENERATE_FILE_FLAG'].values[0] == 1):
+        config_name = "ADF_CONFIG"
         myList = []
         myStr = f"""ADB_01/{month_period}/{ur_no}/Utilities/JSON_CONVERTED_{ur_no}_ADF_CONFIG.json"""
         myList.append(myStr)
         dataframe = pd.DataFrame(myList).apply(f.ljust)
-        f.write_file_txt_of_json(dataframe, ur_no, path_adb_tmp)
+        f.write_file_txt_of_json(dataframe, ur_no, path_adb_tmp, config_name)
 
     if (grouped_file_config['pipeline_name'].values[0] == 'U22_Import_File_Config' and grouped_file_config['GENERATE_FILE_FLAG'].values[0] == 1):
+        config_name = "REGISTER_CONFIG"
         myList = []
         myStr = f"""ADB_01/{month_period}/{ur_no}/Utilities/JSON_CONVERTED_{ur_no}_REGISTER_CONFIG.json"""
         myList.append(myStr)
         dataframe = pd.DataFrame(myList).apply(f.ljust)
-        f.write_file_txt_of_json(dataframe, ur_no, path_adb_tmp)
+        f.write_file_txt_of_json(dataframe, ur_no, path_adb_tmp, config_name)
 
     if (grouped_table_def['pipeline_name'].values[0] == 'U23_Import_Table_Definition' and grouped_table_def['GENERATE_FILE_FLAG'].values[0] == 1):
+        config_name = "TABLE_DEFINITION"
         myList = []
         myStr = f"""ADB_01/{month_period}/{ur_no}/Utilities/JSON_CONVERTED_{ur_no}_TABLE_DEF.json"""
         myList.append(myStr)
         dataframe = pd.DataFrame(myList).apply(f.ljust)
-        f.write_file_txt_of_json(dataframe, ur_no, path_adb_tmp)
+        f.write_file_txt_of_json(dataframe, ur_no, path_adb_tmp, config_name)
 
     if (grouped_int_mapping['pipeline_name'].values[0] == 'U24_Import_Interface_Mapping_Config' and grouped_int_mapping['GENERATE_FILE_FLAG'].values[0] == 1):
+        config_name = "INT_MAPPING"
         myList = []
         myStr = f"""ADB_01/{month_period}/{ur_no}/Utilities/JSON_CONVERTED_{ur_no}_INT_MAPPING.json"""
         myList.append(myStr)
         dataframe = pd.DataFrame(myList).apply(f.ljust)
-        f.write_file_txt_of_json(dataframe, ur_no, path_adb_tmp)
+        f.write_file_txt_of_json(dataframe, ur_no, path_adb_tmp, config_name)
 
     ### DDL deploy list
     ## edwcloud_adb
     ## change existing table
+    print("Creating (ADB) 01_Apply_table_change.json", end=""); f.print_dots(0.5)
     json_ChangeTable = '{"run_name": "01_Apply_table_change","existing_cluster_id": "","notebook_task":{"notebook_path":"/Shared/Apply_table_change_module/01_Apply_table_change", "base_parameters":{"PATH_SRC": "/dbfs/mnt/edw-ctn-landing/ddl_script_apply_change/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/scripts"}}}'
     parsed = json.loads(json_ChangeTable)
     json_txt = (json.dumps(parsed, indent=4)).replace("/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/", f"/{month_period}/{ur_no}/").replace("\n","\n\n")
-    # print(json_txt)
 
     changeTB_json = open(f"{path_adb_tmp}/01_Apply_table_change.json", "w")
     changeTB_json.write(json_txt)
     changeTB_json.close()
-    print("01_Apply_table_change.json >> Export File Success")
+    # print("ADB: 01_Apply_table_change.json >> Export File Success")
+    print(" Success!")
 
+    print(f"Creating (ADB) 01_deployList_{ur_no}_applyTableChange.txt", end=""); f.print_dots(0.5)
     deploy_job_changeTB = f"ADB_01/{month_period}/{ur_no}/Apply_table_change_module/01_Apply_table_change.json"
-    # print(deploy_job_changeTB)
-
     deployList_changeTB = open(f"{path_adb_tmp}/01_deployList_{ur_no}_applyTableChange.txt", "w")
     deployList_changeTB.write(deploy_job_changeTB)
     deployList_changeTB.close()
-    print(f"01_deployList_{ur_no}_applyTableChange.txt >> Export File Success")
+    # print(f"ADB: 01_deployList_{ur_no}_applyTableChange.txt >> Export File Success")
+    print(" Success!")
 
     ## Create new object / Change existing view
+    print(f"Creating (ADB) 99_Run_replace_DDL_Databrick_loop.json", end=""); f.print_dots(0.5)
     json_CreateDDL = '{"run_name": "99_Run_replace_DDL_Databrick_loop","existing_cluster_id": "","notebook_task":{"notebook_path":"/Shared/Setup/99_Run_replace_DDL_Databrick_loop", "base_parameters":{"PATH_SRC": "/dbfs/mnt/edw-ctn-landing/ddl_script/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/ddl","PATH_ERROR": "/dbfs/mnt/edw-ctn-landing/ddl_script/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/errorlog"}}}'
     parsed = json.loads(json_CreateDDL)
     json_txt = (json.dumps(parsed, indent=4)).replace("/MMMyyyy/SI-XXX_SR-XXXXX_SR-XXXXX/", f"/{month_period}/{ur_no}/").replace("\n","\n\n")
-    # print(json_txt)
 
     createDDL_json = open(f"{path_adb_tmp}/99_Run_replace_DDL_Databrick_loop.json", "w")
     createDDL_json.write(json_txt)
     createDDL_json.close()
-    print("99_Run_replace_DDL_Databrick_loop.json >> Export File Success")
-
+    # print("ADB: 99_Run_replace_DDL_Databrick_loop.json >> Export File Success")
+    print(" Success!")
+    
+    print(f"Creating (ADB) 02_deployList_{ur_no}_createDDL.txt", end=""); f.print_dots(0.5)
     deploy_job_createDDL = f"ADB_01/{month_period}/{ur_no}/Setup/99_Run_replace_DDL_Databrick_loop.json\n"
-    # print(deploy_job_createDDL)
-
     deployList_createDDL = open(f"{path_adb_tmp}/02_deployList_{ur_no}_createDDL.txt", "w")
     deployList_createDDL.write(deploy_job_createDDL)
     deployList_createDDL.close()
-    print(f"02_deployList_{ur_no}_createDDL.txt >> Export File Success")
+    # print(f"ADB: 02_deployList_{ur_no}_createDDL.txt >> Export File Success")
+    print(" Success!")
 
 
     ### Recreate Persist
     dlp_list = ",".join(df_dlp['TABLE_NAME_LIST'].tolist())
-
     if not df_dlp.empty:
+        print("Creating (ADB) 25_Recreate_Persisted.json", end=""); f.print_dots(0.5)
         dictionary = f.create_nested_dict(None, "25_Recreate_Persisted", deploy_date, dlp_list)
         json_object = json.dumps(dictionary, indent = 4)
-        # print(json_object)
 
         dlp_json = open(f"{path_adb_tmp}/25_Recreate_Persisted.json", "w")
         dlp_json.write(json_object)
         dlp_json.close()
-        print("25_Recreate_Persisted.json >> Export File Success")
+        # print("ADB: 25_Recreate_Persisted.json >> Export File Success")
+        print(" Success!")
 
+        print(f"Appending (ADB) 02_deployList_{ur_no}_createDDL.txt", end=""); f.print_dots(0.5)
         deploy_job_recPersist = f"ADB_01/{month_period}/{ur_no}/Setup/25_Recreate_Persisted.json"
-        # print(deploy_job_recPersist)
-
         deployList_recPersist = open(f"{path_adb_tmp}/02_deployList_{ur_no}_createDDL.txt", "a")
         deployList_recPersist.write(deploy_job_recPersist)
         deployList_recPersist.close()
-        print(f"02_deployList_{ur_no}_createDDL.txt >> Append File Success")
+        # print(f"ADB: 02_deployList_{ur_no}_createDDL.txt >> Append File Success")
+        print(" Success!")
 
 
     ### edwcloud_adls
@@ -346,21 +355,29 @@ try:
 
     deploylist_tb_change.close()
     deploylist_new_obj.close()
-    print(f"01_deployList_{ur_no}_applyTableChange.txt >> Append File Success")
-    print(f"02_deployList_{ur_no}_createDDL.txt >> Append File Success\n")
+    # print(f"ADB: 01_deployList_{ur_no}_applyTableChange.txt >> Append File Success")
+    # print(f"ADB: 02_deployList_{ur_no}_createDDL.txt >> Append File Success\n")
+    print(f"Creating (ADB) 01_deployList_{ur_no}_applyTableChange.txt", end=""); f.print_dots(0.5); print(" Success!")
+    print(f"Creating (ADB) 02_deployList_{ur_no}_createDDL.txt", end=""); f.print_dots(0.5); print(" Success!")
 
     ## Remove DDL part where Table or View not exist
     if not have_table:
+        print(f"Removing (ADB) 01_deployList_{ur_no}_applyTableChange.txt", end=""); f.print_dots(0.5)
         os.remove(f"{path_adb_tmp}/01_deployList_{ur_no}_applyTableChange.txt")
-        os.remove(f"{path_adls_tmp}/01_deployList_{ur_no}.txt")
-        print(f"ADB: 01_deployList_{ur_no}_applyTableChange.txt >> Remove Success")
-        print(f"ADLS: 01_deployList_{ur_no}.txt >> Remove Success")
-    if not have_view:
-        os.remove(f"{path_adb_tmp}/02_deployList_{ur_no}_createDDL.txt")
-        os.remove(f"{path_adls_tmp}/02_deployList_{ur_no}.txt")
-        print(f"ADB: 02_deployList_{ur_no}_createDDL.txt >> Remove Success")
-        print(f"ADLS: 02_deployList_{ur_no}.txt >> Remove Success")
+        print(" Success!")
 
+        print(f"Removing (ADLS) 01_deployList_{ur_no}.txt", end=""); f.print_dots(0.5)
+        os.remove(f"{path_adls_tmp}/01_deployList_{ur_no}.txt")
+        print(" Success!")
+        
+    if not have_view:
+        print(f"Removing (ADB) 02_deployList_{ur_no}_createDDL.txt", end=""); f.print_dots(0.5)
+        os.remove(f"{path_adb_tmp}/02_deployList_{ur_no}_createDDL.txt")
+        print(" Success!")
+
+        print(f"Removing (ADLS) 02_deployList_{ur_no}.txt", end=""); f.print_dots(0.5)
+        os.remove(f"{path_adls_tmp}/02_deployList_{ur_no}.txt")
+        print(" Success!")
 
     ### Combine every deployment_list
     deploy_config_ = None
@@ -380,14 +397,22 @@ try:
     write_text += deploy_config_ if deploy_config_ else ''
     write_text += deploy_table_ if deploy_table_ else ''
     write_text += deploy_view_ if deploy_view_ else ''
-            
+
+    have_adls = False
+    if write_text != '':
+        have_adls = True
+
+    print(f"Creating (ADLS) 00_deployList_{ur_no}_all.txt", end=""); f.print_dots(0.5)
     with open(f'{path_osfolder}/00_deployList_{ur_no}_all.txt', 'w') as output_file:
         output_file.write(write_text)
+    print(" Success!")
 
     ## Create GIT folder form
     f.create_git_form_folder(ur_no, month_period, path_osfolder, df_adb_notebook)
-
+        
+    
     ### Move notebook to Shared folder
+    print("Generating Upload Notebook to /Shared/ Folder on Databricks", end=""); f.print_dots(1)
     upload_notebook = False
     exec_notebook = False
     if not df_adb_notebook.empty:
@@ -413,6 +438,7 @@ try:
                 shared_path = row['SHARED_PATH'][:-1]
             else:
                 shared_path = row['SHARED_PATH']
+
             notebook_name = row['NOTEBOOK_NAME']
             execute_flag = row['EXECUTE_FLAG']
 
@@ -447,24 +473,29 @@ try:
         list_execute_file.close()
 
         if not content: 
-            print("The file is empty.")
             os.remove(list_execute_path)
             shutil.rmtree(adb_execute_json_folder)
-        else: 
-            print("The file is not empty.")
+    print(" Success!")
 
     ## Create git command
-    f.create_git_command(ur_no, month_period, deploy_date[-2:], have_config, have_view, have_table, upload_notebook, exec_notebook, path_osfolder, user_email)
+    print("Creating Git command and Jenkins Parameters", end=""); f.print_dots(1)
+    f.create_git_command(ur_no, month_period, deploy_date[-2:], have_adls, have_config, have_view, have_table, upload_notebook, exec_notebook, path_osfolder, user_email)
+    print(" Success!")
 
-    ## Remove Empty files and Empty folder
-    f.remove_empty_files_and_folders(path_osfolder)
 
     ### remove temp folder
+    print("Move everything to Destination folder and Remove Temp Folder", end=""); f.print_dots(1)
     shutil.rmtree(path_osfolder+'/edwcloud_adls_tmp') #remove adls temp folder
     shutil.rmtree(path_osfolder+'/edwcloud_adb_tmp') #remove adb temp folder
 
     shutil.move(path_osfolder, path_destfolder)
     shutil.rmtree('/tmp/')
+    print(" Success!")
+
+    ## Remove Empty files and Empty folder
+    f.remove_empty_files_and_folders(path_destfolder)
+
+    f.print_by_letter("Every Document was Generated Successfully :)", 0.05)
 
 except Exception as error_message:
 

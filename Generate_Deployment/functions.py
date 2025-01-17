@@ -1,4 +1,4 @@
-import os, shutil, json
+import os, shutil, time
 
 
 def create_folder(path):
@@ -90,6 +90,7 @@ def create_nested_dict(row, pl, deploy_date, dlp_list = None):
         }
     
 def write_file_json(json_object, ur_no, config_name, path_adb_tmp):
+    print(f"Creating JSON_CONVERTED_{ur_no}_{config_name}.json", end=""); print_dots(0.5)
     try:
         Write_Path = f'{path_adb_tmp}/JSON_CONVERTED_{ur_no}_{config_name}.json'
 
@@ -97,12 +98,15 @@ def write_file_json(json_object, ur_no, config_name, path_adb_tmp):
         with open(Write_Path, 'w') as f:
             f.write(json_object)
 
-        print(f"JSON_CONVERTED_{ur_no}_{config_name}.json >>Export File Success")
+        # print(f"JSON_CONVERTED_{ur_no}_{config_name}.json >> Export File Success")
+        print(" Success!")
 
     except Exception as e:
+        print(" Failed!")
         print(f"Fail to write JSON >>{str(e)}")
 
-def write_file_txt(dataframe, ur_no, path_adls_tmp):
+def write_file_txt(dataframe, ur_no, path_adls_tmp, config_name):
+    print(f"Creating (ADLS:{config_name}) 00_deployList_{ur_no}_utilities.txt", end=""); print_dots(0.5)
     try:
         Write_Path = f'{path_adls_tmp}/00_deployList_{ur_no}_utilities.txt'
 
@@ -112,12 +116,15 @@ def write_file_txt(dataframe, ur_no, path_adls_tmp):
             f.write(f'{StrSet.replace(" ","")}\n')
             f.close()
 
-        print(f"adls: 00_deployList_{ur_no}_utilities.txt >>Export File Success")
+        # print(f"adls: 00_deployList_{ur_no}_utilities.txt >> Export File Success")
+        print(" Success!")
 
     except Exception as e:
+        print(" Failed!")
         print(f"Fail to write TXT >>{str(e)}")
 
-def write_file_txt_of_json(dataframe, ur_no, path_adb_tmp):
+def write_file_txt_of_json(dataframe, ur_no, path_adb_tmp, config_name):
+    print(f"Creating (ADB:{config_name}) 00_deployList_{ur_no}_utilities.txt", end=""); print_dots(0.5)
     try:
         Write_Path = f'{path_adb_tmp}/00_deployList_{ur_no}_utilities.txt'
         # Writing JSON to a File
@@ -126,12 +133,14 @@ def write_file_txt_of_json(dataframe, ur_no, path_adb_tmp):
             f.write(f'{StrSet.replace(" ","")}\n')
             f.close()
 
-        print(f"adb: 00_deployList_{ur_no}_utilities.txt >>Export File Success")
+        # print(f"adb: 00_deployList_{ur_no}_utilities.txt >>Export File Success")
+        print(" Success!")
 
     except Exception as e:
+        print(" Failed!")
         print(f"Fail to write TXT >>{str(e)}")
 
-def create_git_command(ur_no, month_period, deploy_date, have_config, have_view, have_table, upload_notebook, exec_notebook, output_path, email):
+def create_git_command(ur_no, month_period, deploy_date, have_adls, have_config, have_view, have_table, upload_notebook, exec_notebook, output_path, email):
     split_ur_no = ur_no.split('_')
     ur_code = ('_').join(split_ur_no[:3])
     sr_epic = ur_code.split('_')[1]
@@ -163,7 +172,8 @@ git fetch -p && git pull origin
 {push}
 """
 
-    git_command += f"""
+    if have_adls:
+        git_command += f"""
 ### ADLS Jenkins Parameters ###
 {'CHANGE_NO'}\t\t:{ur_no}/(SREQ-UAT)
 {'INPUT_HASH'}\t\t:
@@ -171,8 +181,8 @@ git fetch -p && git pull origin
 {'UR'}\t\t\t\t\t:{ur_code}
 {'SENDING_EMAIL'}\t:{email}
 {'VERSION'}\t\t\t:
-
-### ADB Jenkins Parameters ###"""
+"""
+        
     if have_config:
         git_command += f"""
 {'CHANGE_NO'}\t\t\t:{ur_no}/(SREQ-UAT)
@@ -183,6 +193,9 @@ git fetch -p && git pull origin
 {'SENDING_EMAIL'}\t\t:{email}
 {'VERSION'}\t\t\t\t:
 """
+
+    git_command += "\n### ADB Jenkins Parameters ###"       
+
     if have_table:
         git_command += f"""
 {'CHANGE_NO'}\t\t\t:{ur_no}/(SREQ-UAT)
@@ -308,13 +321,15 @@ def create_git_form_folder(ur_no, month_period, path_osfolder, notebook_df):
                     shutil.copy(x, sub_sub_folder+'/'+file_for_move)
 
 def remove_empty_files_and_folders(path):
+
+    print("Removing empty folder", end=" "); print_dots(0.5)
     # Remove empty files
     for root, dirs, files in os.walk(path):
         for file_name in files:
             file_path = os.path.join(root, file_name)
             if os.path.getsize(file_path) == 0:
                 os.remove(file_path)
-                print(f"Removed empty file: {file_path}")
+                # print(f"Removed empty file: {file_path}")
 
     # Remove empty subfolders
     for root, dirs, files in os.walk(path, topdown=False):
@@ -322,9 +337,24 @@ def remove_empty_files_and_folders(path):
             dir_path = os.path.join(root, dir_name)
             if not os.listdir(dir_path):
                 os.rmdir(dir_path)
-                print(f"Removed empty folder: {dir_path}")
+                # print(f"Removed empty folder: {dir_path}")
 
     # Check the root folder itself
     if not os.listdir(path):
         os.rmdir(path)
-        print(f"Removed empty folder: {path}")
+        # print(f"Removed empty folder: {path}")
+
+    print(" Done!\n")
+
+def print_dots(duration, newline: bool = 0):
+    end_time = time.time() + duration
+    while time.time() < end_time:
+        print(".", end="", flush=True)
+        time.sleep(0.1)
+    if newline:
+        print("")
+
+def print_by_letter(text, delay):
+    for char in text:
+        print(char, end="", flush=True)
+        time.sleep(delay)
