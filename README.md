@@ -28,4 +28,4 @@ cd Generate_Deployment
 In folder ***input_folder*** see the excel template for prepare parameter to generate deployment list
 
 
-![Alt text](markdown_img/ducky.jpg)
+![Alt text](markdown_img/serious_duck.png)
