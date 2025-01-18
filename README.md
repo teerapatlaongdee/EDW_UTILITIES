@@ -43,9 +43,8 @@ After the excel file is ready now you can running the program by following step
 3. Then will have another Explorer popup for choosing destination folder **\*\*Be careful long path**
 ![Popup choosing Destination folder](markdown_img/Run_002_GDL_sel_des_folder.png)
 4. After the program running without any Error. let's check the result on your destination folder
-<img src="markdown_img/Run_002_GDL_sel_des_folder.png" width="200" />
-<img src="markdown_img/Run_004_GDL_check_result.png" width="200" />
-![Alt text](markdown_img/Run_002_GDL_sel_des_folder.png)
+![Alt text](markdown_img/Run_003_GDL_finish.png)
 ![Alt text](markdown_img/Run_004_GDL_check_result.png)
 
-![Alt text](markdown_img/serious_duck.png)
+<!-- ![Alt text](markdown_img/serious_duck.png) -->
+<img src="markdown_img/serious_duck.png" width="300" />
