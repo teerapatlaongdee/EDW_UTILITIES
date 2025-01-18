@@ -47,4 +47,5 @@ After the excel file is ready now you can running the program by following step
 ![Alt text](markdown_img/Run_004_GDL_check_result.png)
 
 <!-- ![Alt text](markdown_img/serious_duck.png) -->
+### Have a nice day!!!
 <img src="markdown_img/serious_duck.png" width="300" />
