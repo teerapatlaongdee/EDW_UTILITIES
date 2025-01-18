@@ -432,6 +432,7 @@ try:
         #dec9999/SI-0000_SR-00000_SR-00000_SYSTEM/Execute/Generate_Report_Something.dbc
 
         deployList_notebook = open(f"{deploylist_upload_folder}/03_deployList_{ur_no}_Upload_Notebook.txt", "w")
+        deployList_execute = open(f"{adb_deploylist_path}03_deployList_{ur_no}_execute_notebook.txt", "w")
 
         for index, row in df_adb_notebook.iterrows():
             if row['SHARED_PATH'][-1] == "/":
@@ -441,13 +442,22 @@ try:
 
             notebook_name = row['NOTEBOOK_NAME']
             execute_flag = row['EXECUTE_FLAG']
+            git_folder_flag = row['GIT_PATH']
 
-            deployList_notebook.write(f"PYTHON,DBC,{shared_path},{notebook_name},{month_period}/{ur_no}/Execute/{notebook_name}.dbc\n")
-            deployList_execute = open(f"{adb_deploylist_path}03_deployList_{ur_no}_execute_notebook.txt", "w")
+            if git_folder_flag == 1:
+                deployList_notebook.write(f"PYTHON,DBC,{shared_path},{notebook_name},{month_period}/{ur_no}/Execute/{notebook_name}.dbc\n")
 
-            dbc_file = open(f"{dbc_folder}/{notebook_name}.dbc.txt", "w")
-            dbc_file.write("dummy")
-            dbc_file.close()
+                dbc_file = open(f"{dbc_folder}/{notebook_name}.dbc.txt", "w")
+                dbc_file.write("dummy")
+                dbc_file.close()
+            else:
+                dbc_folder_0 = f"{notebook_folder}/{shared_path.replace('/Shared/','')}"
+                f.create_folder(dbc_folder_0)
+                deployList_notebook.write(f"PYTHON,DBC,{shared_path},{notebook_name},{shared_path.replace('/Shared/','')}/{notebook_name}.dbc\n")
+
+                dbc_file = open(f"{dbc_folder_0}/{notebook_name}.dbc.txt", "w")
+                dbc_file.write("dummy")
+                dbc_file.close()
             
             if execute_flag == 1:
                 exec_notebook = True
