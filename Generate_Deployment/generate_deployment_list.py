@@ -7,13 +7,16 @@ from tkinter.filedialog import askopenfilename, askdirectory
 current_path = os.getcwd()
 tz = timezone(timedelta(hours=7)) #set timezone UTC+7
 
-# Get input file
-input_file = askopenfilename(initialdir=current_path, title="Choose PREPARE_ITEM")
-print(input_file)
+# # Get input file
+# input_file = askopenfilename(initialdir=current_path, title="Choose PREPARE_ITEM")
+# print(input_file)
 
-# Get path output
-destination_folder = askdirectory(initialdir=current_path, title="Choose Destination Folder")
-print(destination_folder)
+# # Get path output
+# destination_folder = askdirectory(initialdir=current_path, title="Choose Destination Folder")
+# print(destination_folder)
+
+input_file = "C:/scb100690/UR/2025/0314_02_SI-2595_SR-33111_SR-33114_KLM/PREPARE_ITEM_LIST_SI-2595_SR-33111_SR-33114_KLM.xlsx"
+destination_folder = "C:/scb100690/Playground/EDW_UTILITIES/Generate_Deployment/output_folder"
 
 ## Read excel file to Pandas DataFrame
 print("Reading Excel File", end=""); f.print_dots(1, 1)
@@ -154,7 +157,7 @@ try:
         df_dlp = df_table_def[df_table_def['SCHEMA_NAME_LIST'] == 'DLPRST'].copy() ## for recreate persist
         
         have_config = True
-        config_name = "TABLE_DEFINITION"   
+        config_name = "TABLE_DEF"   
         pl_name = "U23_Import_Table_Definition"
         if (grouped_table_def['SCHEMA_NAME_LIST'].str.len().values[0] <= 2048) & (grouped_table_def['TABLE_NAME_LIST'].str.len().values[0] <= 2048):
         # Convert dataframe to json format
@@ -164,7 +167,8 @@ try:
 
             dictionary['notebook_task']['base_parameters']['DELETE_FLAG'] = str(dictionary['notebook_task']['base_parameters']['DELETE_FLAG'])
             # Serializing json 
-            json_object = json.dumps(dictionary, indent = 4) 
+            json_object = json.dumps(dictionary, indent = 4)
+            print(json_object)
             f.write_file_json(json_object, ur_no, config_name, path_adb_tmp)
         else:
             print("fail, the number of character is more than 2048 characters.")
@@ -208,7 +212,7 @@ try:
         f.write_file_txt(dataframe, ur_no, path_adls_tmp, config_name)
 
     if (grouped_table_def['pipeline_name'].values[0] == 'U23_Import_Table_Definition' and grouped_table_def['GENERATE_FILE_FLAG'].values[0] == 1):
-        config_name = "TABLE_DEFINITION"
+        config_name = "TABLE_DEF"
         myList = []
         schema_name = df_table_def['SCHEMA_NAME_LIST'].tolist()
         table_name = df_table_def['TABLE_NAME_LIST'].tolist()
@@ -246,7 +250,7 @@ try:
         f.write_file_txt_of_json(dataframe, ur_no, path_adb_tmp, config_name)
 
     if (grouped_table_def['pipeline_name'].values[0] == 'U23_Import_Table_Definition' and grouped_table_def['GENERATE_FILE_FLAG'].values[0] == 1):
-        config_name = "TABLE_DEFINITION"
+        config_name = "TABLE_DEF"
         myList = []
         myStr = f"""ADB_01/{month_period}/{ur_no}/Utilities/JSON_CONVERTED_{ur_no}_TABLE_DEF.json"""
         myList.append(myStr)
