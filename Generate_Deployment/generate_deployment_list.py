@@ -7,16 +7,13 @@ from tkinter.filedialog import askopenfilename, askdirectory
 current_path = os.getcwd()
 tz = timezone(timedelta(hours=7)) #set timezone UTC+7
 
-# # Get input file
-# input_file = askopenfilename(initialdir=current_path, title="Choose PREPARE_ITEM")
-# print(input_file)
+# Get input file
+input_file = askopenfilename(initialdir=current_path, title="Choose PREPARE_ITEM")
+print(input_file)
 
-# # Get path output
-# destination_folder = askdirectory(initialdir=current_path, title="Choose Destination Folder")
-# print(destination_folder)
-
-input_file = "C:/scb100690/UR/2025/0314_02_SI-2595_SR-33111_SR-33114_KLM/PREPARE_ITEM_LIST_SI-2595_SR-33111_SR-33114_KLM.xlsx"
-destination_folder = "C:/scb100690/Playground/EDW_UTILITIES/Generate_Deployment/output_folder"
+# Get path output
+destination_folder = askdirectory(initialdir=current_path, title="Choose Destination Folder")
+print(destination_folder)
 
 ## Read excel file to Pandas DataFrame
 print("Reading Excel File", end=""); f.print_dots(1, 1)
