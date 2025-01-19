@@ -509,7 +509,7 @@ try:
     f.print_by_letter("Every Document was Generated Successfully :)", 0.05)
 
     ## Open Destination folder
-    os.system(f"explorer {destination_folder}")
+    os.system(f"explorer {destination_folder.replace("/", "\\")}")
 
 except Exception as error_message:
 
