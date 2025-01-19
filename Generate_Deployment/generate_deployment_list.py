@@ -505,9 +505,13 @@ try:
     ## Remove Empty files and Empty folder
     f.remove_empty_files_and_folders(path_destfolder)
 
+    ## End words
     f.print_by_letter("Every Document was Generated Successfully :)", 0.05)
+
+    ## Open Destination folder
+    os.system(f"explorer {destination_folder}")
 
 except Exception as error_message:
 
     shutil.rmtree('/tmp/')
-    print(str(error_message))
+    print(f"\nProgram Error!!! : {str(error_message)}")
