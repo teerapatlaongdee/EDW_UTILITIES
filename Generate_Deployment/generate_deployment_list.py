@@ -165,7 +165,6 @@ try:
             dictionary['notebook_task']['base_parameters']['DELETE_FLAG'] = str(dictionary['notebook_task']['base_parameters']['DELETE_FLAG'])
             # Serializing json 
             json_object = json.dumps(dictionary, indent = 4)
-            print(json_object)
             f.write_file_json(json_object, ur_no, config_name, path_adb_tmp)
         else:
             print("fail, the number of character is more than 2048 characters.")
